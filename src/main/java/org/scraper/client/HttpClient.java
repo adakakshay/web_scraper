@@ -29,6 +29,7 @@ public class HttpClient {
 
         // Get the API configuration
         ApiConfig apiConfig = domainConfig.getApiConfig().get(apiEndpoint);
+        String contentType = apiConfig != null ? apiConfig.getContentType() : "json"; // Default to JSON if not specified
 
         // Get the appropriate rate limit configuration
         ApiRateLimitConfig rateLimitConfig;
@@ -42,14 +43,14 @@ public class HttpClient {
         applyRateLimit(domain, apiEndpoint, rateLimitConfig);
 
         // Make the request
-        return fetch(url);
+        return fetch(url, contentType);
     }
 
     private void applyRateLimit(String domain, String apiEndpoint, ApiRateLimitConfig rateLimitConfig) {
         // Implementation of rate limiting
     }
 
-    public FetchResult fetch(String urlString) throws Exception {
+    public FetchResult fetch(String urlString, String contentType) throws Exception {
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
@@ -64,7 +65,7 @@ public class HttpClient {
                 response.append(inputLine);
             }
             in.close();
-            return new FetchResult(true, response.toString());
+            return new FetchResult(true, response.toString(), contentType);
         } else {
             throw new Exception("Failed to fetch URL: " + responseCode);
         }

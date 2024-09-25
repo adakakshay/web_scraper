@@ -7,6 +7,7 @@ import org.scraper.factory.ResponseHandlerFactory;
 import org.scraper.factory.handler.URLResponseHandler;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class UrlConsumer implements Runnable {
     private final BlockingQueue<String> urlQueue;
@@ -28,10 +29,16 @@ public class UrlConsumer implements Runnable {
     private void processUrl() {
         String url = null;
         try {
-            url = urlQueue.take(); // Take the URL from the queue
+            // Use poll with a timeout to prevent blocking forever
+            url = urlQueue.poll(10, TimeUnit.SECONDS); // Wait 10 seconds for a new URL
+            if (url == null) {
+                System.out.println("No more URLs to process, terminating consumer...");
+                return; // Gracefully exit the consumer if no URLs are available for the timeout duration
+            }
+
             System.out.println("Processing URL: " + url);
 
-            //Command Factory to execute
+            // Execute the scrapping command
             scrappingCommand.execute(url);
 
         } catch (InterruptedException e) {

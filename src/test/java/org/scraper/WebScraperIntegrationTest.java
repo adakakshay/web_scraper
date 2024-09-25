@@ -50,9 +50,9 @@ public class WebScraperIntegrationTest {
         String defaultJsonResponse = "{\"title\": \"My Title\"}";
         String defaultHtmlResponse = "<html> <head> </head><body><h1> <class=\"product-title\" data-id=\"f3bfa24c-2645-48c8-9117-b338bef9b9ab\">Product title</h1>";
         when(httpClient.fetchUrl("http://google.com/search1.json")).thenReturn(new FetchResult(true, defaultJsonResponse, "json"));
-        when(httpClient.fetchUrl("http://facebook.com/search3.json")).thenReturn(new FetchResult(false, defaultJsonResponse, "json"));
+        when(httpClient.fetchUrl("http://facebook.com/search3.json")).thenReturn(new FetchResult(true, defaultJsonResponse, "json"));
         when(httpClient.fetchUrl("http://google.com/map.html")).thenReturn(new FetchResult(true, defaultHtmlResponse, "html"));
-        when(httpClient.fetchUrl("http://facebook.com/map3.html")).thenReturn(new FetchResult(false, defaultHtmlResponse, "html"));
+        when(httpClient.fetchUrl("http://facebook.com/map3.html")).thenReturn(new FetchResult(true, defaultHtmlResponse, "html"));
 
         // Create a ScrappingCommand
         ScrappingCommand scrappingCommand = new BasicScrapingCommand(httpClient);

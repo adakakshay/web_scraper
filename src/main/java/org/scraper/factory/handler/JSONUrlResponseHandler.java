@@ -3,10 +3,12 @@ package org.scraper.factory.handler;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.scraper.DomainUtils;
+import org.scraper.config.ApiConfig;
 import org.scraper.config.WebScrapperConfig;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class JSONUrlResponseHandler implements URLResponseHandler {
     private final ObjectMapper objectMapper;
@@ -22,7 +24,20 @@ public class JSONUrlResponseHandler implements URLResponseHandler {
         try {
             String domain = DomainUtils.extractDomain(url);
             String path = DomainUtils.extractEndpoint(url);
-            List<String> tags = List.of(config.getDomainConfig().get(domain).getApiConfig().get(path).getTags());
+            Map<String, ApiConfig> apiConfigMap = config.getDomainConfig().get(domain).getApiConfig();
+
+            List<String> tags = null;
+            for (String key : apiConfigMap.keySet()) {
+                if (path.contains(key)) {
+                    tags = List.of(apiConfigMap.get(key).getTags());
+                    break;
+                }
+            }
+
+            if (tags == null) {
+                System.err.println("No matching tags found in the configuration for URL: " + url);
+                return null;
+            }
 
             JsonNode jsonNode = objectMapper.readTree(responseBody);
             for (String tag : tags) {
