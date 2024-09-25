@@ -1,25 +1,41 @@
+defaultDomainConfig:
+  defaultRateLimitConfig:
+    rateLimit: 50
+    timeWindowInSeconds: 60
 
 domainConfig:
   google.com:
-    rateLimitConfig:
-        rateLimit: 100
-        timeWindowInSeconds: 60
+    defaultRateLimitConfig:    # Default rate limit for this domain
+      rateLimit: 100
+      timeWindowInSeconds: 60
     apiConfig:
       /search:
-        tags : []
+        rateLimitConfig:
+          rateLimit: 100        # Specific rate limit for the /search API
+          timeWindowInSeconds: 60
+        tags: []
       /maps:
-        tags : []
+        rateLimitConfig:
+          rateLimit: 100        # Specific rate limit for the /maps API
+          timeWindowInSeconds: 60
+        tags: []
+
   facebook.com:
-    rateLimitConfig:
-        rateLimit: 200
-        timeWindowInSeconds: 60
+    defaultRateLimitConfig:    # Default rate limit for this domain
+      rateLimit: 100
+      timeWindowInSeconds: 60
     apiConfig:
       /search:
-        tags : []
+        rateLimitConfig:
+          rateLimit: 200        # Specific rate limit for the /search API
+          timeWindowInSeconds: 60
+        tags: []
       /maps:
-        tags : []
+        rateLimitConfig:
+          rateLimit: 200        # Specific rate limit for the /maps API
+          timeWindowInSeconds: 60
+        tags: []
 
 batchProcessingConfig:
-    batchSize: 100
-    threadPoolSize: 10
-
+  batchSize: 100
+  threadPoolSize: 10

@@ -1,24 +1,26 @@
 package org.scraper.command;
 
+import org.scraper.FetchResult;
 import org.scraper.client.HttpClient;
 import org.scraper.factory.ResponseHandlerFactory;
 import org.scraper.factory.handler.URLResponseHandler;
 
-import javax.inject.Inject;
-
 public class BasicScrapingCommand implements ScrappingCommand {
     private final HttpClient httpClient;
 
-    public BasicScrapingCommand(){
-        this.httpClient = new HttpClient();
+    public BasicScrapingCommand(HttpClient httpClient) {
+        this.httpClient = httpClient;
     }
+
     @Override
     public void execute(String url) {
         try {
-            String responseBody = httpClient.fetch(url);
-            URLResponseHandler handler = ResponseHandlerFactory.getHandler(url);
-            String result = handler.handle(responseBody);
-            System.out.println("Processed result: " + result);
+            FetchResult fetchResult = httpClient.fetchUrl(url);
+            if (fetchResult.isSuccess()) {
+                URLResponseHandler handler = ResponseHandlerFactory.getHandler(url);
+                String result = handler.handle(fetchResult.getMessage(), url);
+                System.out.println("Processed result: " + result);
+            }
         } catch (Exception e) {
             System.err.println("Failed to process URL: " + e.getMessage());
         }

@@ -1,25 +1,15 @@
 package org.scraper.config;
 
-import java.util.Map;
-
+import com.google.common.util.concurrent.RateLimiter;
+import lombok.Data;
+@Data
 public class RateLimitConfig {
-    private Map<String, Integer> rateLimits;
-    private int defaultRateLimit = 100; // Default to 1 request per second
+    private RateLimiter rateLimiter;
 
-    public Map<String, Integer> getRateLimits() {
-        return rateLimits;
-    }
-
-    public void setRateLimits(Map<String, Integer> rateLimits) {
-        this.rateLimits = rateLimits;
-    }
-
-    public int getDefaultRateLimit() {
-        return defaultRateLimit;
-    }
-
-    public void setDefaultRateLimit(int defaultRateLimit) {
-        this.defaultRateLimit = defaultRateLimit;
+    public void applyRateLimit(ApiRateLimitConfig config) {
+        if (config != null) {
+            rateLimiter = RateLimiter.create(config.getRateLimit());
+            rateLimiter.acquire(); // Acquire the rate limit permit before making the request
+        }
     }
 }
-

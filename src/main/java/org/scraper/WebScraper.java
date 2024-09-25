@@ -1,51 +1,48 @@
 package org.scraper;
 
-import org.scraper.command.BasicScrapingCommand;
 import org.scraper.config.ConfigurationLoader;
-import org.scraper.config.RateLimitConfig;
-import org.scraper.processor.BatchProcessor;
+import org.scraper.processor.FileReaderProcessor;
 import org.scraper.processor.UrlConsumer;
-import org.scraper.observer.LoggingObserver;
-import org.scraper.observer.UrlProcessingNotifier;
-import org.scraper.limiter.DefaultRateLimitingStrategy;
+import org.scraper.client.HttpClient;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class WebScraper {
     public static void main(String[] args) {
         try {
             // Load configuration using Singleton pattern
             ConfigurationLoader configLoader = ConfigurationLoader.getInstance();
+            int batchSize = configLoader.getConfig().getBatchProcessingConfig().getBatchSize();
+            String filePath = "src/main/resources/urls.txt";
 
-            // Initialize notifier and observers
-            UrlProcessingNotifier notifier = new UrlProcessingNotifier();
-            notifier.addObserver(new LoggingObserver());
+            // Initialize the URL queue
+            BlockingQueue<String> urlQueue = new LinkedBlockingQueue<>();
 
-            // Initialize rate limiter using Strategy pattern
-            DefaultRateLimitingStrategy rateLimiter = new DefaultRateLimitingStrategy(rateLimitConfig);
+            // Initialize the FileReaderProcessor (subject)
+            FileReaderProcessor fileReaderProcessor = new FileReaderProcessor(urlQueue, filePath, batchSize);
 
-            // Initialize batch processor
-            BatchProcessor batchProcessor = new BatchProcessor(10, 100);
+            // Create an HTTP client
+            HttpClient httpClient = new HttpClient(configLoader.getConfig());
 
-            // Create a thread pool for URL consumers
+            // Create a thread pool for consumers and file processing
+            ExecutorService executorService = Executors.newFixedThreadPool(1 + 5); // 1 producer + 5 consumers
+
+            // Initialize consumers and register them as observers before starting the producer
             int numberOfConsumers = 5;
-            ExecutorService executorService = Executors.newFixedThreadPool(numberOfConsumers);
-
-            // Start consumers
             for (int i = 0; i < numberOfConsumers; i++) {
-                executorService.submit(new UrlConsumer(batchProcessor.getUrlQueue(), rateLimiter, notifier, new BasicScrapingCommand()));
+                UrlConsumer consumer = new UrlConsumer(urlQueue, httpClient);
+                fileReaderProcessor.addObserver(consumer); // Register consumer as an observer
+                executorService.submit(consumer); // Submit consumers to the thread pool
             }
 
-            // Load URLs to process and publish them
-            GenericFileLoader fileLoader = new GenericFileLoader();
-            List<String> urls = fileLoader.loadTextFile("src/main/resources/urls.txt");
-            batchProcessor.publishUrls(urls);
+            // Start the FileReaderProcessor after consumers are ready
+            executorService.submit(fileReaderProcessor); // Start the file reader processor
 
-
-            // Shutdown executor service
+            // Shutdown executor service after tasks are complete
             executorService.shutdown();
 
         } catch (IOException e) {
