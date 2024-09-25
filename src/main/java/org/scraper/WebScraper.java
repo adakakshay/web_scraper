@@ -1,5 +1,7 @@
 package org.scraper;
 
+import org.scraper.command.BasicScrapingCommand;
+import org.scraper.command.ScrappingCommand;
 import org.scraper.config.ConfigurationLoader;
 import org.scraper.processor.FileReaderProcessor;
 import org.scraper.processor.UrlConsumer;
@@ -10,6 +12,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class WebScraper {
     public static void main(String[] args) {
@@ -22,30 +25,37 @@ public class WebScraper {
             // Initialize the URL queue
             BlockingQueue<String> urlQueue = new LinkedBlockingQueue<>();
 
-            // Initialize the FileReaderProcessor (subject)
+            // Initialize the FileReaderProcessor (producer)
             FileReaderProcessor fileReaderProcessor = new FileReaderProcessor(urlQueue, filePath, batchSize);
 
             // Create an HTTP client
             HttpClient httpClient = new HttpClient(configLoader.getConfig());
 
-            // Create a thread pool for consumers and file processing
-            ExecutorService executorService = Executors.newFixedThreadPool(1 + 5); // 1 producer + 5 consumers
+            // Create a ScrappingCommand
+            ScrappingCommand scrappingCommand = new BasicScrapingCommand(httpClient);
 
-            // Initialize consumers and register them as observers before starting the producer
+            // Define the number of consumers
             int numberOfConsumers = 5;
+
+            // Create a thread pool
+            ExecutorService executorService = Executors.newFixedThreadPool(1 + numberOfConsumers); // 1 producer + 5 consumers
+
+            // Submit FileReaderProcessor to the executor service to produce URLs
+            executorService.submit(fileReaderProcessor);
+
+            // Start consumers (independently)
             for (int i = 0; i < numberOfConsumers; i++) {
-                UrlConsumer consumer = new UrlConsumer(urlQueue, httpClient);
-                fileReaderProcessor.addObserver(consumer); // Register consumer as an observer
-                executorService.submit(consumer); // Submit consumers to the thread pool
+                UrlConsumer consumer = new UrlConsumer(urlQueue, scrappingCommand);
+                executorService.submit(consumer); // Submit each consumer to the thread pool
             }
 
-            // Start the FileReaderProcessor after consumers are ready
-            executorService.submit(fileReaderProcessor); // Start the file reader processor
-
-            // Shutdown executor service after tasks are complete
+            // Wait for file processing and consumers to finish
             executorService.shutdown();
+            if (!executorService.awaitTermination(1, TimeUnit.HOURS)) {
+                executorService.shutdownNow(); // Force shutdown if it takes too long
+            }
 
-        } catch (IOException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }

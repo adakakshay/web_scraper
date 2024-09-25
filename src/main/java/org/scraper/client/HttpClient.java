@@ -5,19 +5,15 @@ import org.scraper.FetchResult;
 import org.scraper.config.ApiConfig;
 import org.scraper.config.ApiRateLimitConfig;
 import org.scraper.config.DomainConfig;
-import org.scraper.config.RateLimitConfig;
 import org.scraper.config.WebScrapperConfig;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 
 public class HttpClient {
     private final WebScrapperConfig config;
-    private final Map<String, RateLimitConfig> rateLimiters = new HashMap<>();  // Store rate limiters per API
 
     public HttpClient(WebScrapperConfig config) {
         this.config = config;
@@ -29,7 +25,7 @@ public class HttpClient {
         String domain = DomainUtils.extractDomain(url);
 
         // Get the domain configuration
-        DomainConfig domainConfig = config.getDomainConfig().getOrDefault(domain, config.getDefaultDomainConfig());
+        DomainConfig domainConfig = config.getDomainConfigOrDefault(domain);
 
         // Get the API configuration
         ApiConfig apiConfig = domainConfig.getApiConfig().get(apiEndpoint);
@@ -50,12 +46,7 @@ public class HttpClient {
     }
 
     private void applyRateLimit(String domain, String apiEndpoint, ApiRateLimitConfig rateLimitConfig) {
-        // Create a unique key for the domain and API endpoint
-        String key = domain + apiEndpoint;
-
-        // Get or create a RateLimiter for this specific domain/API
-        RateLimitConfig rateLimiter = rateLimiters.computeIfAbsent(key, k -> new RateLimitConfig());
-        rateLimiter.applyRateLimit(rateLimitConfig);
+        // Implementation of rate limiting
     }
 
     public FetchResult fetch(String urlString) throws Exception {

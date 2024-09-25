@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.scraper.client.HttpClient;
+import org.scraper.command.BasicScrapingCommand;
+import org.scraper.command.ScrappingCommand;
 import org.scraper.config.ConfigurationLoader;
 import org.scraper.processor.FileReaderProcessor;
 import org.scraper.processor.UrlConsumer;
@@ -25,7 +27,7 @@ public class WebScraperIntegrationTest {
     private ExecutorService executorService;
 
     @BeforeEach
-    public void setUp() throws IOException {
+    public void setUp() {
         // Load the actual configuration
         configLoader = ConfigurationLoader.getInstance();
 
@@ -47,23 +49,21 @@ public class WebScraperIntegrationTest {
         // Mock the fetchUrl method to return a default response
         String defaultJsonResponse = "{\"title\": \"My Title\"}";
         String defaultHtmlResponse = "<html> <head> </head><body><h1> <class=\"product-title\" data-id=\"f3bfa24c-2645-48c8-9117-b338bef9b9ab\">Product title</h1>";
-        when(httpClient.fetchUrl("http://google.com/entity-slug-uuid1.json")).thenReturn(new FetchResult(true, defaultJsonResponse));
-        when(httpClient.fetchUrl("http://example.com/entity-slug-uuid2.json")).thenReturn(new FetchResult(false, defaultJsonResponse));
-        when(httpClient.fetchUrl("http://google2.com/product-slug3.html")).thenReturn(new FetchResult(true, defaultHtmlResponse));
-        when(httpClient.fetchUrl("http://google2.com/product-slug2.html")).thenReturn(new FetchResult(false, defaultHtmlResponse));
-        // Create consumers (observers) and register them
-        int numberOfConsumers = 5;
-        for (int i = 0; i < numberOfConsumers; i++) {
-            UrlConsumer consumer = new UrlConsumer(urlQueue, httpClient);
-            fileReaderProcessor.addObserver(consumer); // Register consumer as an observer
-        }
+        when(httpClient.fetchUrl("http://google.com/search1.json")).thenReturn(new FetchResult(true, defaultJsonResponse, "json"));
+        when(httpClient.fetchUrl("http://facebook.com/search3.json")).thenReturn(new FetchResult(false, defaultJsonResponse, "json"));
+        when(httpClient.fetchUrl("http://google.com/map.html")).thenReturn(new FetchResult(true, defaultHtmlResponse, "html"));
+        when(httpClient.fetchUrl("http://facebook.com/map3.html")).thenReturn(new FetchResult(false, defaultHtmlResponse, "html"));
+
+        // Create a ScrappingCommand
+        ScrappingCommand scrappingCommand = new BasicScrapingCommand(httpClient);
 
         // Start the file reader processor
         executorService.submit(fileReaderProcessor);
 
         // Start consumers
+        int numberOfConsumers = 5;
         for (int i = 0; i < numberOfConsumers; i++) {
-            executorService.submit(new UrlConsumer(urlQueue, httpClient));
+            executorService.submit(new UrlConsumer(urlQueue, scrappingCommand));
         }
 
         // Wait for the tasks to complete

@@ -11,12 +11,15 @@ public class ConfigurationLoader {
     private static ConfigurationLoader instance;
     private WebScrapperConfig config;
 
-    private ConfigurationLoader() throws IOException {
-        loadConfigurations();
+    private ConfigurationLoader()  {
+        try {
+            loadConfigurations();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    // Singleton Pattern
-    public static ConfigurationLoader getInstance() throws IOException {
+    public static ConfigurationLoader getInstance()  {
         if (instance == null) {
             synchronized (ConfigurationLoader.class) {
                 if (instance == null) {

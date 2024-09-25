@@ -2,17 +2,20 @@ package org.scraper.processor;
 
 import org.scraper.FetchResult;
 import org.scraper.client.HttpClient;
-import org.scraper.observer.UrlObserver;
+import org.scraper.command.ScrappingCommand;
+import org.scraper.factory.ResponseHandlerFactory;
+import org.scraper.factory.handler.URLResponseHandler;
 
 import java.util.concurrent.BlockingQueue;
 
-public class UrlConsumer implements Runnable, UrlObserver {
+public class UrlConsumer implements Runnable {
     private final BlockingQueue<String> urlQueue;
-    private final HttpClient httpClient;
+    private final ScrappingCommand scrappingCommand;
 
-    public UrlConsumer(BlockingQueue<String> urlQueue, HttpClient httpClient) {
+
+    public UrlConsumer(BlockingQueue<String> urlQueue, ScrappingCommand scrappingCommand) {
         this.urlQueue = urlQueue;
-        this.httpClient = httpClient;
+        this.scrappingCommand = scrappingCommand;
     }
 
     @Override
@@ -27,8 +30,10 @@ public class UrlConsumer implements Runnable, UrlObserver {
         try {
             url = urlQueue.take(); // Take the URL from the queue
             System.out.println("Processing URL: " + url);
-            FetchResult fetchResult = httpClient.fetchUrl(url); // Fetch the URL using the HTTP client
-            System.out.println("Response: " + fetchResult.isSuccess());
+
+            //Command Factory to execute
+            scrappingCommand.execute(url);
+
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (Exception e) {
@@ -43,12 +48,5 @@ public class UrlConsumer implements Runnable, UrlObserver {
                 }
             }
         }
-    }
-
-    @Override
-    public void update() {
-        // If notified of a new URL, process it
-        System.out.println("New URL available to process: ");
-        processUrl();
     }
 }

@@ -6,17 +6,11 @@ import lombok.Data;
 public class FetchResult {
     private final boolean success;
     private final String message;
+    private final String contentType;
 
-    public FetchResult(boolean success, String message) {
+    public FetchResult(boolean success, String message, String contentType) {
         this.success = success;
         this.message = message;
-    }
-
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public String getMessage() {
-        return message;
+        this.contentType = contentType;
     }
 }
