@@ -1,0 +1,25 @@
+
+domainConfig:
+  google.com:
+    rateLimitConfig:
+        rateLimit: 100
+        timeWindowInSeconds: 60
+    apiConfig:
+      /search:
+        tags : []
+      /maps:
+        tags : []
+  facebook.com:
+    rateLimitConfig:
+        rateLimit: 200
+        timeWindowInSeconds: 60
+    apiConfig:
+      /search:
+        tags : []
+      /maps:
+        tags : []
+
+batchProcessingConfig:
+    batchSize: 100
+    threadPoolSize: 10
+

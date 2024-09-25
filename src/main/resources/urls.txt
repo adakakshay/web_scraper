@@ -1,0 +1,6 @@
+http://google.com/entity-slug-uuid1.json
+http://google1.com/entity-slug-uuid2.json
+http://google2.com/product-slug1.html
+http://google3.com/product-slug2.html
+http://google1.com/entity-slug-uuid3.json
+http://google2.com/product-slug3.html
