@@ -7,7 +7,6 @@ import org.scraper.processor.FileReaderProcessor;
 import org.scraper.processor.UrlConsumer;
 import org.scraper.client.HttpClient;
 
-import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

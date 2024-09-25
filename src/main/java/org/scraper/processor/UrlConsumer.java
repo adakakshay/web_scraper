@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class UrlConsumer implements Runnable {
     private final BlockingQueue<String> urlQueue;
     private final ScrappingCommand scrappingCommand;
+    private boolean terminationMessagePrinted = false;
 
 
     public UrlConsumer(BlockingQueue<String> urlQueue, ScrappingCommand scrappingCommand) {
@@ -21,11 +22,24 @@ public class UrlConsumer implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
-            processUrl();
+        try {
+            while (true) {
+                String url = urlQueue.poll(1, TimeUnit.SECONDS);
+                if (url == null) {
+                    if (!terminationMessagePrinted) {
+                        System.out.println("No more URLs to process, terminating consumer...");
+                        terminationMessagePrinted = true;
+                    }
+                    break;
+                }
+                terminationMessagePrinted = false; // Reset flag if a URL is processed
+                System.out.println("Processing URL: " + url);
+                scrappingCommand.execute(url);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
-
     private void processUrl() {
         String url = null;
         try {
