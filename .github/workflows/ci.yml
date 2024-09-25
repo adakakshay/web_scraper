@@ -8,15 +8,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v2
-
-      - name: Set Up JDK 17
-        uses: actions/setup-java@v2
+          
+      # Step 2: Set up Java environment (Java 17 as per your pom.xml)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v1
         with:
           java-version: '17'
-          distribution: ''
 
+      # Step 3: Cache Maven dependencies
       - name: Maven Packages
         uses: actions/cache@v2
         with:
@@ -25,8 +27,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Install Maven Dependencies
-        run: mvn install -DskipTests
+      # Step 4: Build the project and run tests
+      - name: Build with Maven and run tests
+        run: mvn clean install
 
-      - name: Run Unit Tests
-        run: mvn test
+      # Step 5: Report Test
+      - name: Archive test reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: target/surefire-reports/
