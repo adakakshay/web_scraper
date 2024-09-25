@@ -87,3 +87,9 @@ Build the project:
     mvn clean install
 Run Test cases
     mvn test
+
+
+Test Coverage
+    Method - 71%
+    Line - 61%
+    ![](/Users/akshaykumar.adak/Desktop/Screenshot 2024-09-26 at 2.08.02 AM.png)

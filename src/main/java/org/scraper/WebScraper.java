@@ -14,7 +14,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class WebScraper {
-    public static void main(String[] args) {
+    private final HttpClient httpClient;
+
+    public WebScraper(HttpClient httpClient) {
+        this.httpClient = httpClient;
+    }
+
+    public void startProcessing() {
         try {
             // Load configuration using Singleton pattern
             ConfigurationLoader configLoader = ConfigurationLoader.getInstance();
@@ -26,9 +32,6 @@ public class WebScraper {
 
             // Initialize the FileReaderProcessor (producer)
             FileReaderProcessor fileReaderProcessor = new FileReaderProcessor(urlQueue, filePath, batchSize);
-
-            // Create an HTTP client
-            HttpClient httpClient = new HttpClient(configLoader.getConfig());
 
             // Create a ScrappingCommand
             ScrappingCommand scrappingCommand = new BasicScrapingCommand(httpClient);
