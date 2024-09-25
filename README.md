@@ -85,7 +85,5 @@ Prepare the URLs file: Place the URLs you wish to scrape in a text file named ur
 Build the project:
 
     mvn clean install
-
-Run the scraper:
-
-    java -jar target/web-scraper.jar
+Run Test cases
+    mvn test
