@@ -27,11 +27,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # Step 4: Build the project and run tests
+      # Step 4: Build the project
       - name: Build with Maven and run tests
         run: mvn clean install
 
-      # Step 5: Report Test
+      # Step 5: Run Test
+      - name: Run tests
+        run: mvn test
+
+
+      # Step 6: Report Test
       - name: Archive test reports
         if: always()
         uses: actions/upload-artifact@v3
