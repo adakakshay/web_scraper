@@ -6,6 +6,7 @@ import org.scraper.config.ApiConfig;
 import org.scraper.config.ApiRateLimitConfig;
 import org.scraper.config.DomainConfig;
 import org.scraper.config.WebScrapperConfig;
+import org.scraper.exception.RateLimitExceededException;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -21,9 +22,7 @@ public class HttpClientService {
     private final Map<String, Long> requestTimestamps = new ConcurrentHashMap<>();
     private final Map<String, Integer> requestCounts = new ConcurrentHashMap<>();
 
-
-    public HttpClientService(WebScrapperConfig config,
-                             HttpClient httpClient) {
+    public HttpClientService(WebScrapperConfig config, HttpClient httpClient) {
         this.config = config;
         this.httpClient = httpClient;
     }
@@ -47,13 +46,16 @@ public class HttpClientService {
             rateLimitConfig = domainConfig.getDefaultRateLimitConfig(); // Use default domain rate limit if API not found
         }
 
+        // Apply rate limiting based on the configuration
+        if (!applyRateLimit(domain, apiEndpoint, rateLimitConfig)) {
+            // Requeue the request or handle the rate limit exceeded case
+            throw new RateLimitExceededException("Rate limit exceeded for " + domain + apiEndpoint);
+        }
+
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .GET()
                 .build();
-
-        // Apply rate limiting based on the configuration
-        applyRateLimit(domain, apiEndpoint, rateLimitConfig);
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         String contentType = response.headers().firstValue("Content-Type").orElse("text/html").split(";")[0];
@@ -64,7 +66,7 @@ public class HttpClientService {
                 .build();
     }
 
-    private void applyRateLimit(String domain, String apiEndpoint, ApiRateLimitConfig rateLimitConfig) {
+    private boolean applyRateLimit(String domain, String apiEndpoint, ApiRateLimitConfig rateLimitConfig) {
         String key = domain + apiEndpoint;
         long currentTime = System.currentTimeMillis();
         long timeWindowMillis = TimeUnit.SECONDS.toMillis(rateLimitConfig.getTimeWindowInSeconds());
@@ -82,21 +84,14 @@ public class HttpClientService {
             } else {
                 int currentCount = requestCounts.get(key);
                 if (currentCount >= rateLimitConfig.getRateLimit()) {
-                    // If the rate limit is exceeded, wait for the time window to reset
-                    long waitTime = timeWindowMillis - elapsedTime;
-                    try {
-                        Thread.sleep(waitTime);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                    // Reset the count and timestamp after waiting
-                    requestCounts.put(key, 1);
-                    requestTimestamps.put(key, System.currentTimeMillis());
+                    // If the rate limit is exceeded, return false
+                    return false;
                 } else {
                     // Increment the count if the rate limit is not exceeded
                     requestCounts.put(key, currentCount + 1);
                 }
             }
         }
+        return true;
     }
 }

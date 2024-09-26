@@ -16,7 +16,7 @@ public class HTMLUrlResponseHandler implements URLResponseHandler {
         Element titleElement = doc.selectFirst("h1.product-title");
 
         if (titleElement != null) {
-            resultMap.put("title", titleElement.text());
+            resultMap.put("Product Title", titleElement.text());
         }
 
         return resultMap;

@@ -1,4 +1,5 @@
 package org.scraper;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.scraper.client.HttpClientService;
@@ -25,15 +26,28 @@ class WebScraperIntegrationTest {
         httpClient = mock(HttpClient.class);
         httpClientService = new HttpClientService(ConfigurationLoader.getInstance().getConfig(), httpClient);
 
-        // Mock the HttpResponse
-        HttpResponse<String> mockResponse = mock(HttpResponse.class);
-        when(mockResponse.body()).thenReturn("{\"title\": \"My Title\"}");
-        when(mockResponse.headers()).thenReturn(HttpHeaders.of(Map.of("Content-Type", List.of("application/json")), (k, v) -> true));
-        when(mockResponse.statusCode()).thenReturn(200);
+        // Mock the JSON HttpResponse
+        HttpResponse<String> mockJsonResponse = mock(HttpResponse.class);
+        when(mockJsonResponse.body()).thenReturn("{\"title\": \"My Title\"}");
+        when(mockJsonResponse.headers()).thenReturn(HttpHeaders.of(Map.of("Content-Type", List.of("application/json")), (k, v) -> true));
+        when(mockJsonResponse.statusCode()).thenReturn(200);
 
-        // Mock the HttpClient to return the mockResponse
+        // Mock the HTML HttpResponse
+        HttpResponse<String> mockHtmlResponse = mock(HttpResponse.class);
+        when(mockHtmlResponse.body()).thenReturn("<html><head></head><body><h1 class=\"product-title\" data-id=\"f3bfa24c-2645-48c8-9117-b338bef9b9ab\">Product title</h1></body></html>");
+        when(mockHtmlResponse.headers()).thenReturn(HttpHeaders.of(Map.of("Content-Type", List.of("text/html")), (k, v) -> true));
+        when(mockHtmlResponse.statusCode()).thenReturn(200);
+
+        // Mock the HttpClient to return the appropriate response based on the request URL
         when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockResponse);
+                .thenAnswer(invocation -> {
+                    HttpRequest request = invocation.getArgument(0);
+                    if (request.uri().toString().endsWith(".json")) {
+                        return mockJsonResponse;
+                    } else {
+                        return mockHtmlResponse;
+                    }
+                });
     }
 
     @Test

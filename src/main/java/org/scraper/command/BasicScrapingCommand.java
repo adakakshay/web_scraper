@@ -21,7 +21,7 @@ public class BasicScrapingCommand implements ScrappingCommand {
             if (fetchResult.isSuccess()) {
                 URLResponseHandler handler = ResponseHandlerFactory.getHandler(fetchResult.getContentType());
                 Map<String, String> result = handler.handle(fetchResult.getMessage(), url);
-                System.out.println("Processed result: " + result);
+                System.out.println("Processed result for url " + url + " with Tags: " + result);
             }
         } catch (Exception e) {
             System.err.println("Failed to process URL: " + e.getMessage());
