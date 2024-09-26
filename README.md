@@ -5,7 +5,7 @@ This web scraper project is designed to efficiently process a large number of UR
 
 The project includes the following major components:
 
-    Configuration Management: Loads configurations like rate limits, batch processing settings, and domain-specific configurations from a YAML file.
+    Configuration Management: Loads configurations like rate limits and domain-specific configurations from a YAML file.
     Rate Limiting: Applied based on the domain and API rate limit configurations to avoid overloading the target websites.
     Command Pattern: Implements a ScrappingCommand interface to execute different scraping logic depending on the response content type (JSON, HTML, XML).
     Threaded Processing: Uses producers and consumers to read URLs from a file and scrape them concurrently.
@@ -26,7 +26,7 @@ Features
         Response handlers extract specific data points based on tags or elements.
 
     Configuration Management:
-        Loads configurations from a config.yml file, including domain-specific rate limits, batch sizes, thread pool sizes, etc.
+        Loads configurations from a config.yml file, including domain-specific rate limits, thread pool sizes, etc.
 
 Architecture
 Core Classes
@@ -89,7 +89,6 @@ Key Configuration Fields
 
     Rate Limits: Define how many requests are allowed within a given time window.
     Domain Configurations: API-specific rate limits and configurations are defined for each domain.
-    Batch Processing: Configure thread pool size and batch sizes for URL processing.
 
 Usage
 Prerequisites
