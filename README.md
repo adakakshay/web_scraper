@@ -1,95 +1,112 @@
 Web Scraper Project
 Overview
 
-This web scraper is designed to handle scraping tasks efficiently and in a structured manner. It uses a batch processing approach to scrape multiple URLs, with rate-limiting, multi-threading, and customizable configurations for different APIs.
+This web scraper project is designed to efficiently process a large number of URLs, apply rate limiting based on domain and API configuration, and handle different response formats like JSON, HTML, and XML. It utilizes a multithreaded approach for reading URLs, consuming them, and executing scraping commands in parallel.
 
-The main components of the system include:
+The project includes the following major components:
 
-    Configuration Management: Handles domain-specific configurations and rate limits.
-    URL Processing: Reads URLs from files and processes them in batches.
-    Rate Limiting: Applies API rate limits dynamically based on configuration.
-    Response Handling: Handles different types of responses like JSON, HTML, and XML.
-    Multi-threading: Uses a thread pool to process URLs in parallel.
+    Configuration Management: Loads configurations like rate limits, batch processing settings, and domain-specific configurations from a YAML file.
+    Rate Limiting: Applied based on the domain and API rate limit configurations to avoid overloading the target websites.
+    Command Pattern: Implements a ScrappingCommand interface to execute different scraping logic depending on the response content type (JSON, HTML, XML).
+    Threaded Processing: Uses producers and consumers to read URLs from a file and scrape them concurrently.
+    Response Handlers: Handles different content types using a handler factory, which provides specific handlers for JSON, HTML, and XML.
 
 Features
 
-    Batch Processing: The system can process URLs in batches for efficient scraping.
-    Multi-threaded Execution: Multiple consumers can scrape URLs in parallel, improving performance.
-    Rate Limiting: Rate limits can be set per API endpoint, allowing controlled and respectful scraping.
-    Flexible Configuration: Domain-specific configurations for API rate limits, content types, and other parameters are supported using YAML configuration files.
-    Response Handlers: The scraper supports JSON, HTML, and XML responses with appropriate handlers for each content type.
+    Multithreaded Scraping:
+        Uses producers and consumers to process URLs in parallel.
+        Can customize the number of consumers to scrape URLs.
 
-Project Structure
+    Rate Limiting:
+        Configurable rate limits based on domain or API.
+        Applied dynamically depending on the API and domain configuration.
 
+    Content-Type Based Handling:
+        JSON, HTML, and XML responses are processed by corresponding handlers.
+        Response handlers extract specific data points based on tags or elements.
 
+    Configuration Management:
+        Loads configurations from a config.yml file, including domain-specific rate limits, batch sizes, thread pool sizes, etc.
 
-        src
-        ├── main
-        │   ├── java
-        │   │   ├── org
-        │   │   │   ├── scraper
-        │   │   │   │   ├── command           # Contains scrapping commands for executing URL scrapes
-        │   │   │   │   ├── config            # Configuration classes (e.g., rate limit, domain, batch processing)
-        │   │   │   │   ├── client            # HttpClient to fetch URL data
-        │   │   │   │   ├── factory           # ResponseHandlerFactory and its handlers (JSON, HTML, XML)
-        │   │   │   │   ├── processor         # Components responsible for file reading, batching, and consuming URLs
-        │   │   │   │   ├── FetchResult.java  # Holds the result of URL fetching
-        │   │   │   │   └── WebScraper.java   # Main entry point for the scraper application
-        │   └── resources
-        │       └── config.yml                # YAML file containing configuration for the scraper
+Architecture
+Core Classes
+
+    Main: Entry point of the application.
+    WebScraper: Initializes the system and starts the scraping process using multithreading.
+    ConfigurationLoader: Singleton class that loads the configuration from a YAML file.
+    HttpClientService: Handles HTTP requests and applies rate limiting before fetching URLs.
+    ScrappingCommand: Interface that defines the contract for executing the scraping logic.
+    BasicScrapingCommand: Implements the ScrappingCommand interface and processes URLs using response handlers.
+    UrlConsumer: Runnable class that consumes URLs from a queue and executes the scraping logic.
+    FileReaderProcessor: Runnable class that reads URLs from a file and adds them to a queue.
+    ResponseHandlerFactory: Factory class that provides the appropriate response handler based on content type (JSON, HTML, XML).
+    DomainUtils: Utility class to extract domain and API endpoints from URLs.
 
 Configuration
 
-The configuration is managed using a YAML file (config.yml). It defines domain-specific API configurations, rate limits, and batch processing options.
-Example Configuration (config.yml):
+The project loads configurations from src/main/resources/config.yml through the ConfigurationLoader class. This configuration includes:
 
-        defaultDomainConfig:
-          defaultRateLimitConfig:
-            rateLimit: 10
+    Domain-specific API configurations
+    Rate limit configurations
+
+Content Type Handling
+
+    JSON: Extracts specific fields based on the tags defined in the configuration.
+    HTML: Extracts data using Jsoup and parses elements based on predefined selectors.
+    XML: Uses a basic handler for XML processing.
+
+Configuration
+
+The configuration is loaded from a YAML file. Below is a sample structure of config.yml:
+
+yaml
+
+    defaultDomainConfig:
+        defaultRateLimitConfig:
+            rateLimit: 50
             timeWindowInSeconds: 60
-        domainConfig:
-          "example.com":
+
+    domainConfig:
+        google.com:
+            defaultRateLimitConfig:    # Default rate limit for this domain
+                rateLimit: 100
+                timeWindowInSeconds: 60
             apiConfig:
-              "/api/v1/products":
-                rateLimitConfig:
-                  rateLimit: 5
-                  timeWindowInSeconds: 30
-                contentType: "json"
-                tags: ["data", "items"]
-        batchProcessingConfig:
-          batchSize: 100
-          threadPoolSize: 10
+                /search1:
+                    rateLimitConfig:
+                        rateLimit: 100        # Specific rate limit for the /search API
+                        timeWindowInSeconds: 60
+                    tags: ["title"]
+                /map:
+                    rateLimitConfig:
+                        rateLimit: 100        # Specific rate limit for the /maps API
+                        timeWindowInSeconds: 60
+                    tags: []
 
-Key Configuration Components:
 
-    Domain Configurations: Domain-specific rate limits and API endpoint configurations. The default configuration applies when a domain or endpoint is not explicitly defined.
-    Rate Limits: Specifies how many requests can be made in a given time window.
-    Batch Processing: Defines batch size and thread pool size for the scraping process.
+
+Key Configuration Fields
+
+    Rate Limits: Define how many requests are allowed within a given time window.
+    Domain Configurations: API-specific rate limits and configurations are defined for each domain.
+    Batch Processing: Configure thread pool size and batch sizes for URL processing.
 
 Usage
 Prerequisites
 
-    Java 8+
-    Maven (for building the project)
+    Java 11+
+    Maven (for building and running the project)
 
-Steps to Run the Web Scraper
-Clone the repository:
-
-      git clone <repository-url>
-      cd web-scraper
-
-Configure the scraper: Update the config.yml file in the src/main/resources folder with your desired API configurations, rate limits, and batch sizes.
-
-Prepare the URLs file: Place the URLs you wish to scrape in a text file named urls.txt under the src/main/resources/ directory. Each line should contain a single URL.
-
-Build the project:
+Build the Project
 
     mvn clean install
-Run Test cases
+
+Run the Test cases
+
     mvn test
 
+TODO
 
-Test Coverage
-    Method - 71%
-    Line - 61%
-    ![coverage.png](coverage.png)
+    Retry Logic: Implement retry logic for failed URLs.
+    Additional Response Handlers: Expand the response handlers to support more content types.
+    Enhanced Error Handling: Improve error reporting and handling for rate limit errors or connection timeouts.

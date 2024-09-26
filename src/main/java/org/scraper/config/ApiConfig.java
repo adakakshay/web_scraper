@@ -6,5 +6,4 @@ import lombok.Data;
 public class ApiConfig {
     private ApiRateLimitConfig rateLimitConfig;
     private String[] tags;
-    private String contentType;
 }

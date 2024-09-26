@@ -7,6 +7,7 @@ import org.scraper.config.ApiConfig;
 import org.scraper.config.WebScrapperConfig;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +21,8 @@ public class JSONUrlResponseHandler implements URLResponseHandler {
     }
 
     @Override
-    public String handle(String responseBody, String url) {
+    public Map<String, String> handle(String responseBody, String url) {
+        Map<String, String> resultMap = new HashMap<>();
         try {
             String domain = DomainUtils.extractDomain(url);
             String path = DomainUtils.extractEndpoint(url);
@@ -36,21 +38,24 @@ public class JSONUrlResponseHandler implements URLResponseHandler {
 
             if (tags == null) {
                 System.err.println("No matching tags found in the configuration for URL: " + url);
-                return null;
+                System.out.println("Response body: " + responseBody);
+                return resultMap;
             }
 
             JsonNode jsonNode = objectMapper.readTree(responseBody);
             for (String tag : tags) {
                 JsonNode tagNode = jsonNode.get(tag);
                 if (tagNode != null) {
-                    return tagNode.asText();
+                    resultMap.put(tag, tagNode.asText());
                 }
             }
-            System.err.println("No matching tags found in the JSON response for URL: " + url);
-            return null;
+
+            if (resultMap.isEmpty()) {
+                System.err.println("No matching tags found in the JSON response for URL: " + url);
+            }
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
         }
+        return resultMap;
     }
 }

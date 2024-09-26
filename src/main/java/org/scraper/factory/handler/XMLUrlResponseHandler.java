@@ -2,12 +2,14 @@ package org.scraper.factory.handler;
 
 import org.scraper.DomainUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class XMLUrlResponseHandler implements URLResponseHandler {
     @Override
-    public String handle(String response, String url) {
-        String domain = DomainUtils.extractDomain(url);
+    public Map<String, String> handle(String response, String url) {
         System.out.println("Handling XML Response: " + response);
-        return null;
+        return new HashMap<>();
     }
 }
 

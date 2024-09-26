@@ -1,10 +1,6 @@
 package org.scraper.processor;
 
-import org.scraper.FetchResult;
-import org.scraper.client.HttpClient;
 import org.scraper.command.ScrappingCommand;
-import org.scraper.factory.ResponseHandlerFactory;
-import org.scraper.factory.handler.URLResponseHandler;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +20,7 @@ public class UrlConsumer implements Runnable {
     public void run() {
         try {
             while (true) {
-                String url = urlQueue.poll(1, TimeUnit.SECONDS);
+                String url = urlQueue.poll(1, TimeUnit.SECONDS); //TODO : Startgies to wait
                 if (url == null) {
                     if (!terminationMessagePrinted) {
                         System.out.println("No more URLs to process, terminating consumer...");

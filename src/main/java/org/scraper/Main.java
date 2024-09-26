@@ -1,7 +1,9 @@
 package org.scraper;
 
-import org.scraper.client.HttpClient;
+import org.scraper.client.HttpClientService;
 import org.scraper.config.ConfigurationLoader;
+
+import java.net.http.HttpClient;
 
 public class Main {
 
@@ -10,10 +12,11 @@ public class Main {
         ConfigurationLoader configLoader = ConfigurationLoader.getInstance();
 
         // Create an HTTP client
-        HttpClient httpClient = new HttpClient(configLoader.getConfig());
+        HttpClient httpClient = HttpClient.newHttpClient();
+        HttpClientService httpClientService = new HttpClientService(configLoader.getConfig(), httpClient);
 
-        // Create an instance of the WebScraper with the HttpClient
-        WebScraper webScraper = new WebScraper(httpClient);
+        // Create an instance of the WebScraper with the HttpClientService
+        WebScraper webScraper = new WebScraper(httpClientService);
 
         // Start processing
         webScraper.startProcessing();

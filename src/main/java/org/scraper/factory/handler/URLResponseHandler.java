@@ -1,5 +1,7 @@
 package org.scraper.factory.handler;
 
+import java.util.Map;
+
 public interface URLResponseHandler {
-    String handle(String response, String url);
+    Map<String, String> handle(String response, String url);
 }

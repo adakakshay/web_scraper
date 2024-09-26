@@ -12,11 +12,11 @@ public class ResponseHandlerFactory {
     private static final ConfigurationLoader config = ConfigurationLoader.getInstance();
     public static URLResponseHandler getHandler(String contentType) {
         switch (contentType.toLowerCase()) {
-            case "json":
+            case "application/json":
                 return new JSONUrlResponseHandler(objectMapper, config.getConfig());
-            case "html":
+            case "text/html":
                 return new HTMLUrlResponseHandler();
-            case "xml":
+            case "application/xml":
                 return new XMLUrlResponseHandler();
             default:
                 throw new IllegalArgumentException("No handler for the given content type: " + contentType);

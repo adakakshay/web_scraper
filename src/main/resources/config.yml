@@ -14,13 +14,11 @@ domainConfig:
           rateLimit: 100        # Specific rate limit for the /search API
           timeWindowInSeconds: 60
         tags: ["title"]
-        contentType: "json"
       /map:
         rateLimitConfig:
           rateLimit: 100        # Specific rate limit for the /maps API
           timeWindowInSeconds: 60
         tags: []
-        contentType: "html"
 
   facebook.com:
     defaultRateLimitConfig:    # Default rate limit for this domain
@@ -32,14 +30,8 @@ domainConfig:
           rateLimit: 200        # Specific rate limit for the /search API
           timeWindowInSeconds: 60
         tags: ["title"]
-        contentType: "json"
       /map3:
         rateLimitConfig:
           rateLimit: 200        # Specific rate limit for the /maps API
           timeWindowInSeconds: 60
         tags: []
-        contentType: "html"
-
-batchProcessingConfig:
-  batchSize: 100
-  threadPoolSize: 10

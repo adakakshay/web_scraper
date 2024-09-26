@@ -1,31 +1,39 @@
 package org.scraper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.scraper.client.HttpClient;
+import org.scraper.client.HttpClientService;
+import org.scraper.config.ConfigurationLoader;
 
 import java.io.File;
+import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.List;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 class WebScraperIntegrationTest {
     private HttpClient httpClient;
+    private HttpClientService httpClientService;
 
     @BeforeEach
     void setup() throws Exception {
         httpClient = mock(HttpClient.class);
-        // Mock the fetchUrl method to return a default response
-        String defaultJsonResponse = "{\"title\": \"My Title\"}";
-        String defaultHtmlResponse = "<html> <head> </head><body><h1> <class=\"product-title\" data-id=\"f3bfa24c-2645-48c8-9117-b338bef9b9ab\">Product title</h1>";
-        when(httpClient.fetchUrl("http://google.com/search1.json")).thenReturn(new FetchResult(true, defaultJsonResponse, "json"));
-        when(httpClient.fetchUrl("http://facebook.com/search3.json")).thenReturn(new FetchResult(true, defaultJsonResponse, "json"));
-        when(httpClient.fetchUrl("http://google.com/map.html")).thenReturn(new FetchResult(true, defaultHtmlResponse, "html"));
-        when(httpClient.fetchUrl("http://facebook.com/map3.html")).thenReturn(new FetchResult(true, defaultHtmlResponse, "html"));
+        httpClientService = new HttpClientService(ConfigurationLoader.getInstance().getConfig(), httpClient);
 
+        // Mock the HttpResponse
+        HttpResponse<String> mockResponse = mock(HttpResponse.class);
+        when(mockResponse.body()).thenReturn("{\"title\": \"My Title\"}");
+        when(mockResponse.headers()).thenReturn(HttpHeaders.of(Map.of("Content-Type", List.of("application/json")), (k, v) -> true));
+        when(mockResponse.statusCode()).thenReturn(200);
+
+        // Mock the HttpClient to return the mockResponse
+        when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(mockResponse);
     }
 
     @Test
@@ -35,11 +43,12 @@ class WebScraperIntegrationTest {
         assertTrue(testFile.exists(), "Test file does not exist");
 
         // Create an instance of the WebScraper
-        WebScraper webScraper = new WebScraper(httpClient);
+        WebScraper webScraper = new WebScraper(httpClientService);
 
         // Start processing
         webScraper.startProcessing();
-        // Verify that the HttpClient fetchUrl method was called
-        verify(httpClient, atLeastOnce()).fetchUrl(anyString());
+
+        // Verify that the HttpClient send method was called
+        verify(httpClient, atLeastOnce()).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
     }
 }
